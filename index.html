@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOLO LEVELING SYSTEM</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@500;700&display=swap');
+
+body {
+    font-family: 'Inter', sans-serif;
+    background: radial-gradient(circle at center, #0a0a0a 0%, #000000 100%);
+    overflow: hidden;
+}
+
+.title-font {
+    font-family: 'Orbitron', sans-serif;
+}
+
+.glass {
+    background: rgba(15, 23, 42, 0.75);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(0, 240, 255, 0.25);
+}
+
+.neon-blue {
+    box-shadow: 0 0 15px #00f0ff, 0 0 30px #00f0ff;
+}
+
+.system-text {
+    font-family: monospace;
+    letter-spacing: 2px;
+}
+
+.particle-bg {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    background: url('https://picsum.photos/id/1015/1920/1080') no-repeat center/cover;
+    opacity: 0.08;
+    z-index: -1;
+}
+
+.level-up { animation: levelUpAnim 1.5s ease-in-out; }
+@keyframes levelUpAnim {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.18); color: #00f0ff; text-shadow: 0 0 25px #00f0ff; }
+    100% { transform: scale(1); }
+}
+
+.popup {
+    position: fixed; top: 50%; left: 50%;
+    transform: translate(-50%, -50%) scale(0.85);
+    opacity: 0;
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: 1000;
+    width: 420px;
+}
+
+.popup.show { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+
+.popup-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(8px);
+    z-index: 999;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+.popup-overlay.show { opacity: 1; }
+
+/* Inventory Grid */
+.inventory-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 16px;
+}
+</style>
+</head>
+<body class="text-slate-200 min-h-screen">
+
+<div class="particle-bg"></div>
+
+<div class="flex h-screen">
+    <!-- Sidebar -->
+    <div class="w-64 glass border-r border-cyan-500/30 p-6 flex flex-col">
+        <div class="flex items-center gap-3 mb-10">
+            <div class="w-12 h-12 bg-gradient-to-br from-cyan-400 to-purple-600 rounded-full flex items-center justify-center text-3xl shadow-lg neon-blue">👑</div>
+            <div>
+                <h1 class="title-font text-3xl font-bold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-500">SOLO</h1>
+                <p class="text-xs text-cyan-400 -mt-1">LEVELING SYSTEM</p>
+            </div>
+        </div>
+
+        <nav class="space-y-2 flex-1">
+            <button onclick="switchTab(0)" class="tab-btn active w-full text-left px-5 py-4 rounded-xl hover:bg-white/10 flex items-center gap-3 transition-all"><i class="fas fa-user"></i><span>Status</span></button>
+            <button onclick="switchTab(1)" class="tab-btn w-full text-left px-5 py-4 rounded-xl hover:bg-white/10 flex items-center gap-3 transition-all"><i class="fas fa-clipboard-list"></i><span>Quest Board</span></button>
+            <button onclick="switchTab(2)" class="tab-btn w-full text-left px-5 py-4 rounded-xl hover:bg-white/10 flex items-center gap-3 transition-all"><i class="fas fa-box"></i><span>Inventory</span></button>
+            <button onclick="switchTab(3)" class="tab-btn w-full text-left px-5 py-4 rounded-xl hover:bg-white/10 flex items-center gap-3 transition-all"><i class="fas fa-store"></i><span>System Shop</span></button>
+            <button onclick="switchTab(4)" class="tab-btn w-full text-left px-5 py-4 rounded-xl hover:bg-white/10 flex items-center gap-3 transition-all"><i class="fas fa-bolt"></i><span>Skills</span></button>
+            <button onclick="switchTab(5)" class="tab-btn w-full text-left px-5 py-4 rounded-xl hover:bg-white/10 flex items-center gap-3 transition-all"><i class="fas fa-skull"></i><span>Shadow Army</span></button>
+        </nav>
+
+        <div class="mt-auto pt-6 border-t border-cyan-500/30">
+            <div class="text-xs text-slate-400">Player: <span id="player-name" class="text-white">Sung Jin-Woo</span></div>
+            <div onclick="levelUpDemo()" class="cursor-pointer mt-6 text-center py-3 text-sm bg-gradient-to-r from-red-600 to-purple-600 rounded-2xl hover:brightness-110 transition-all font-medium">
+                Simulate Level Up
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-1 p-8 overflow-auto" id="main-content">
+
+        <!-- Status Tab -->
+        <div id="tab-0" class="tab-content">
+            <!-- Same as previous version (Status + Stats + HP/MP/Shadows) -->
+            <div class="flex justify-between items-end mb-8">
+                <div>
+                    <div class="text-cyan-400 text-sm system-text">[PLAYER STATUS]</div>
+                    <h2 class="title-font text-6xl font-bold" id="level">Level 47</h2>
+                    <p class="text-2xl text-purple-400">Shadow Monarch • S-Class Hunter</p>
+                </div>
+                <div class="text-right">
+                    <div class="text-sm text-slate-400">EXP</div>
+                    <div class="w-80 h-3 bg-slate-800 rounded-full overflow-hidden">
+                        <div id="exp-bar" class="h-full w-[68%] bg-gradient-to-r from-cyan-400 to-purple-500 rounded-full"></div>
+                    </div>
+                    <div class="text-xs mt-1 text-slate-400">12,450 / 18,300</div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-6 mb-10">
+                <!-- Stats cards (same as last version) -->
+                <div onclick="showStatPopup(0)" class="glass p-6 rounded-3xl neon-blue cursor-pointer hover:scale-105 transition-all">
+                    <div class="flex justify-between"><div>Strength</div><div class="text-cyan-400 font-bold text-3xl" id="str">142</div></div>
+                    <button onclick="event.stopImmediatePropagation(); addStat(0)" class="mt-6 text-xs px-5 py-1.5 bg-cyan-500/20 hover:bg-cyan-500/40 rounded-full">+1</button>
+                </div>
+                <div onclick="showStatPopup(1)" class="glass p-6 rounded-3xl neon-blue cursor-pointer hover:scale-105 transition-all">
+                    <div class="flex justify-between"><div>Agility</div><div class="text-cyan-400 font-bold text-3xl" id="agi">98</div></div>
+                    <button onclick="event.stopImmediatePropagation(); addStat(1)" class="mt-6 text-xs px-5 py-1.5 bg-cyan-500/20 hover:bg-cyan-500/40 rounded-full">+1</button>
+                </div>
+                <div onclick="showStatPopup(2)" class="glass p-6 rounded-3xl neon-blue cursor-pointer hover:scale-105 transition-all">
+                    <div class="flex justify-between"><div>Vitality</div><div class="text-cyan-400 font-bold text-3xl" id="vit">135</div></div>
+                    <button onclick="event.stopImmediatePropagation(); addStat(2)" class="mt-6 text-xs px-5 py-1.5 bg-cyan-500/20 hover:bg-cyan-500/40 rounded-full">+1</button>
+                </div>
+                <div onclick="showStatPopup(3)" class="glass p-6 rounded-3xl neon-blue cursor-pointer hover:scale-105 transition-all">
+                    <div class="flex justify-between"><div>Intelligence</div><div class="text-cyan-400 font-bold text-3xl" id="int">67</div></div>
+                    <button onclick="event.stopImmediatePropagation(); addStat(3)" class="mt-6 text-xs px-5 py-1.5 bg-cyan-500/20 hover:bg-cyan-500/40 rounded-full">+1</button>
+                </div>
+                <div onclick="showStatPopup(4)" class="glass p-6 rounded-3xl neon-blue cursor-pointer hover:scale-105 transition-all">
+                    <div class="flex justify-between"><div>Perception</div><div class="text-cyan-400 font-bold text-3xl" id="per">89</div></div>
+                    <button onclick="event.stopImmediatePropagation(); addStat(4)" class="mt-6 text-xs px-5 py-1.5 bg-cyan-500/20 hover:bg-cyan-500/40 rounded-full">+1</button>
+                </div>
+                <div onclick="showStatPopup(5)" class="glass p-6 rounded-3xl neon-blue cursor-pointer hover:scale-105 transition-all">
+                    <div class="flex justify-between"><div>Luck</div><div class="text-cyan-400 font-bold text-3xl" id="luck">44</div></div>
+                    <button onclick="event.stopImmediatePropagation(); addStat(5)" class="mt-6 text-xs px-5 py-1.5 bg-cyan-500/20 hover:bg-cyan-500/40 rounded-full">+1</button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-6">
+                <div onclick="showResourcePopup('HP')" class="glass p-8 rounded-3xl text-center neon-blue cursor-pointer hover:scale-105 transition-all">
+                    <div class="text-5xl mb-3">❤️</div><div class="text-4xl font-bold text-red-400" id="hp">2480</div><div class="text-xs text-slate-400">HP</div>
+                </div>
+                <div onclick="showResourcePopup('MP')" class="glass p-8 rounded-3xl text-center neon-blue cursor-pointer hover:scale-105 transition-all">
+                    <div class="text-5xl mb-3">🔷</div><div class="text-4xl font-bold text-cyan-400" id="mp">890</div><div class="text-xs text-slate-400">MP</div>
+                </div>
+                <div onclick="showResourcePopup('Shadows')" class="glass p-8 rounded-3xl text-center neon-blue cursor-pointer hover:scale-105 transition-all">
+                    <div class="text-5xl mb-3">☠️</div><div class="text-4xl font-bold text-purple-400" id="shadows">47</div><div class="text-xs text-slate-400">Shadow Soldiers</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Inventory Tab -->
+        <div id="tab-2" class="tab-content hidden">
+            <h2 class="text-4xl title-font mb-6">Inventory</h2>
+            <div class="inventory-grid" id="inventory-grid">
+                <!-- Items added via JS -->
+            </div>
+        </div>
+
+        <!-- System Shop Tab -->
+        <div id="tab-3" class="tab-content hidden">
+            <h2 class="text-4xl title-font mb-6">System Shop</h2>
+            <p class="text-slate-400 mb-6">Spend your Gold wisely, Hunter.</p>
+            <div class="grid grid-cols-3 gap-6" id="shop-grid">
+                <!-- Shop items added via JS -->
+            </div>
+        </div>
+
+        <!-- Skills Tab -->
+        <div id="tab-4" class="tab-content hidden">
+            <h2 class="text-4xl title-font mb-6">Skills & Abilities</h2>
+            <div class="grid grid-cols-2 gap-6" id="skills-grid">
+                <!-- Skills added via JS -->
+            </div>
+        </div>
+
+        <!-- Shadow Army Tab -->
+        <div id="tab-5" class="tab-content hidden">
+            <h2 class="text-4xl title-font mb-6">Shadow Army</h2>
+            <div class="grid grid-cols-4 gap-6" id="army-grid">
+                <!-- Shadow soldiers added via JS -->
+            </div>
+        </div>
+
+        <!-- Quest Board (Simple) -->
+        <div id="tab-1" class="tab-content hidden">
+            <h2 class="text-4xl title-font mb-6">Quest Board</h2>
+            <div class="glass p-6 rounded-3xl">
+                <div class="font-bold text-lg mb-2">Daily Quest: Train for 30 minutes</div>
+                <div class="text-sm text-slate-400 mb-4">Reward: 150 EXP + 80 Gold</div>
+                <button onclick="completeQuest(this)" class="px-8 py-3 bg-green-600 hover:bg-green-500 rounded-2xl">Complete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Popup -->
+<div id="popup-overlay" class="popup-overlay hidden" onclick="closePopup()"></div>
+<div id="popup" class="popup glass rounded-3xl p-8 hidden">
+    <div class="flex justify-between items-start mb-6">
+        <h3 id="popup-title" class="title-font text-3xl font-bold text-cyan-400"></h3>
+        <button onclick="closePopup()" class="text-3xl text-slate-400 hover:text-white">×</button>
+    </div>
+    <div id="popup-content" class="text-slate-300"></div>
+    <div class="mt-8 flex justify-end">
+        <button onclick="closePopup()" class="px-6 py-2.5 bg-cyan-500/20 hover:bg-cyan-500/40 rounded-2xl text-sm">Close</button>
+    </div>
+</div>
+
+<!-- Notification -->
+<div id="notification" class="hidden fixed top-8 left-1/2 -translate-x-1/2 glass px-8 py-4 rounded-2xl border border-cyan-400/50 text-cyan-400 flex items-center gap-3 shadow-2xl z-[1100]">
+    <span id="notif-text" class="system-text"></span>
+</div>
+
+<script>
+// ==================== Tab Switching ====================
+function switchTab(n) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+    document.getElementById(`tab-${n}`).classList.remove('hidden');
+
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active', 'bg-white/10'));
+    document.querySelectorAll('.tab-btn')[n].classList.add('active', 'bg-white/10');
+}
+
+// ==================== Stats & Level ====================
+function addStat(index) {
+    const stats = ['str','agi','vit','int','per','luck'];
+    const el = document.getElementById(stats[index]);
+    el.innerText = parseInt(el.innerText) + 1;
+    showNotification(`+1 ${stats[index].toUpperCase()} allocated`, '#00f0ff');
+    event.stopImmediatePropagation();
+}
+
+function levelUpDemo() {
+    const levelEl = document.getElementById('level');
+    let level = parseInt(levelEl.innerText.replace('Level ', ''));
+    level++;
+    levelEl.classList.add('level-up');
+    levelEl.innerText = `Level ${level}`;
+    showNotification(`LEVEL UP! Now Level ${level}`, '#00f0ff');
+    setTimeout(() => levelEl.classList.remove('level-up'), 1500);
+}
+
+// ==================== Popups ====================
+function showStatPopup(index) { /* same as previous version */ 
+    const names = ["Strength","Agility","Vitality","Intelligence","Perception","Luck"];
+    const desc = ["Physical power","Speed & reflexes","Health & endurance","Magic power","Detection","Luck factor"];
+    const val = document.getElementById(['str','agi','vit','int','per','luck'][index]).innerText;
+    document.getElementById('popup-title').textContent = names[index];
+    document.getElementById('popup-content').innerHTML = `<div class="text-6xl text-cyan-400 font-bold mb-4">${val}</div><p>${desc[index]}</p>`;
+    openPopup();
+}
+
+function showResourcePopup(type) { /* same as previous */ 
+    document.getElementById('popup-title').textContent = type;
+    document.getElementById('popup-content').innerHTML = `<p class="text-5xl font-bold text-purple-400">DEMO VALUE</p>`;
+    openPopup();
+}
+
+function openPopup() {
+    const overlay = document.getElementById('popup-overlay');
+    const popup = document.getElementById('popup');
+    overlay.classList.remove('hidden'); popup.classList.remove('hidden');
+    setTimeout(() => { overlay.classList.add('show'); popup.classList.add('show'); }, 10);
+}
+
+function closePopup() {
+    const overlay = document.getElementById('popup-overlay');
+    const popup = document.getElementById('popup');
+    overlay.classList.remove('show'); popup.classList.remove('show');
+    setTimeout(() => { overlay.classList.add('hidden'); popup.classList.add('hidden'); }, 300);
+}
+
+// ==================== Notification ====================
+function showNotification(message, color = '#00f0ff') {
+    const notif = document.getElementById('notification');
+    document.getElementById('notif-text').innerHTML = message;
+    notif.style.color = color;
+    notif.style.borderColor = color + '50';
+    notif.classList.remove('hidden');
+    setTimeout(() => notif.classList.add('hidden'), 2800);
+}
+
+function completeQuest(btn) {
+    btn.innerHTML = '✓ Completed';
+    btn.disabled = true;
+    showNotification('Quest Completed! +150 EXP +80 Gold', '#22ff88');
+}
+
+// ==================== Demo Inventory ====================
+const inventoryItems = [
+    {name: "Dragon Knight Sword", rarity: "Epic", icon: "⚔️", desc: "Powerful blade from Jeju Island raid"},
+    {name: "Shadow Cape", rarity: "Rare", icon: "🧥", desc: "Increases stealth"},
+    {name: "Healing Potion ×5", rarity: "Common", icon: "🧪", desc: "Restores 500 HP"},
+    {name: "Monarch's Ring", rarity: "Legendary", icon: "💍", desc: "Boosts shadow control"},
+    {name: "Rune of Speed", rarity: "Rare", icon: "🏃", desc: "+15 Agility"},
+];
+
+function loadInventory() {
+    const grid = document.getElementById('inventory-grid');
+    grid.innerHTML = '';
+    inventoryItems.forEach(item => {
+        const div = document.createElement('div');
+        div.className = `glass p-4 rounded-2xl text-center cursor-pointer hover:scale-105 transition-all`;
+        div.innerHTML = `
+            <div class="text-5xl mb-3">${item.icon}</div>
+            <div class="font-medium">${item.name}</div>
+            <div class="text-xs text-yellow-400">${item.rarity}</div>
+        `;
+        div.onclick = () => {
+            document.getElementById('popup-title').textContent = item.name;
+            document.getElementById('popup-content').innerHTML = `<p class="text-slate-400">${item.desc}</p>`;
+            openPopup();
+        };
+        grid.appendChild(div);
+    });
+}
+
+// ==================== Demo Shop ====================
+const shopItems = [
+    {name: "Mana Potion", price: 120, icon: "🔵"},
+    {name: "Shadow Fragment", price: 450, icon: "🌑"},
+    {name: "Stat Point", price: 800, icon: "⭐"},
+    {name: "Random Skill Book", price: 2500, icon: "📖"},
+];
+
+function loadShop() {
+    const grid = document.getElementById('shop-grid');
+    grid.innerHTML = '';
+    shopItems.forEach(item => {
+        const div = document.createElement('div');
+        div.className = `glass p-6 rounded-3xl text-center hover:scale-105 transition-all cursor-pointer`;
+        div.innerHTML = `
+            <div class="text-6xl mb-4">${item.icon}</div>
+            <div class="font-bold">${item.name}</div>
+            <div class="text-cyan-400 text-sm mt-2">${item.price} Gold</div>
+            <button onclick="buyItem('${item.name}', ${item.price}); event.stopImmediatePropagation()" 
+                    class="mt-4 w-full py-2 bg-gradient-to-r from-cyan-500 to-purple-600 rounded-2xl text-sm">Buy</button>
+        `;
+        grid.appendChild(div);
+    });
+}
+
+function buyItem(name, price) {
+    showNotification(`Purchased: ${name} (-${price} Gold)`, '#22ff88');
+}
+
+// ==================== Demo Skills ====================
+function loadSkills() {
+    const skills = [
+        {name: "Shadow Extraction", level: "MAX", icon: "☠️"},
+        {name: "Ruler's Authority", level: "Lv.7", icon: "👑"},
+        {name: "Monarch's Domain", level: "Lv.4", icon: "🌌"},
+        {name: "Stealth", level: "Lv.9", icon: "🌫️"},
+    ];
+    const grid = document.getElementById('skills-grid');
+    grid.innerHTML = '';
+    skills.forEach(s => {
+        const div = document.createElement('div');
+        div.className = `glass p-6 rounded-3xl flex items-center gap-4 hover:scale-105 transition`;
+        div.innerHTML = `
+            <div class="text-5xl">${s.icon}</div>
+            <div>
+                <div class="font-bold">${s.name}</div>
+                <div class="text-xs text-cyan-400">${s.level}</div>
+            </div>
+        `;
+        grid.appendChild(div);
+    });
+}
+
+// ==================== Demo Shadow Army ====================
+function loadShadowArmy() {
+    const soldiers = ["Iron", "Igris", "Tank", "Blood Red", "Kaisel"];
+    const grid = document.getElementById('army-grid');
+    grid.innerHTML = '';
+    soldiers.forEach(name => {
+        const div = document.createElement('div');
+        div.className = `glass p-4 rounded-2xl text-center hover:scale-105 transition-all`;
+        div.innerHTML = `
+            <div class="text-6xl mb-2">🛡️</div>
+            <div class="font-medium">${name}</div>
+            <div class="text-xs text-purple-400">Elite Soldier</div>
+        `;
+        grid.appendChild(div);
+    });
+}
+
+// ==================== Initialize Everything ====================
+window.onload = () => {
+    switchTab(0);
+    
+    // Load demo content
+    loadInventory();
+    loadShop();
+    loadSkills();
+    loadShadowArmy();
+
+    setTimeout(() => {
+        showNotification("Welcome back, Shadow Monarch.", '#a855f7');
+    }, 800);
+};
+</script>
+</body>
+</html>
